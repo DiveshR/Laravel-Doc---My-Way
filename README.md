@@ -12,3 +12,6 @@
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects.
 
 # Laravel Doc  My Way
+
+## Eloquent ORM
+*  [Eloquent: Getting Started](https://github.com/DiveshR/Laravel-Doc---My-Way/blob/main/EloquentGettingStarted.md)
