@@ -237,4 +237,117 @@ Flight::chunk(200, function (Collection $flights) {
     }
 });
 ```
+
+### Advanced Subqueries
+#### Subquery Selects
+
+Eloquent also offers advanced subquery support, which allows you to pull information from related tables in a single query. 
+
+For example, 
+let's imagine that we have a table of flight ```destinations``` and a table of ```flights``` to destinations. The flights table contains an ```arrived_at``` column which indicates when the flight arrived at the destination.
+
+Using the subquery functionality available to the query builder's ```select()``` and ```addSelect()``` methods, we can select all of the destinations and the name of the flight that most recently arrived at that destination using a single query:
+
+```
+use App\Models\Destination;
+use App\Models\Flight;
+ 
+return Destination::addSelect(['last_flight' => Flight::select('name')
+    ->whereColumn('destination_id', 'destinations.id')
+    ->orderByDesc('arrived_at')
+    ->limit(1)
+])->get();
+```
+#### Subquery Ordering
+
+In addition, the query builder's ```orderBy``` function supports subqueries. Continuing to use our flight example, we may use this functionality to sort all destinations based on when the last flight arrived at that destination. Again, this may be done while executing a single database query:
+
+```
+return Destination::orderByDesc(
+    Flight::select('arrived_at')
+        ->whereColumn('destination_id', 'destinations.id')
+        ->orderByDesc('arrived_at')
+        ->limit(1)
+)->get();
+```
+
+### Retrieving Single Models / Aggregates
+You can retrieve single records using the ```find()```, ```first()```, or ```firstWhere()``` methods.
+
+ Instead of returning a collection of models, these methods return a single model instance:
+
+```
+use App\Models\Flight;
+
+// Retrieve a model by its primary key...
+$flight = Flight::find(1);
+
+// Retrieve the first model matching the query constraints...
+$flight = Flight::where('active', 1)->first();
+
+// Alternative to retrieving the first model matching the query constraints...
+$flight = Flight::firstWhere('active', 1);
+```
+
+Sometimes you may wish to perform some other action if no results are found. The ```findOr()``` and ```firstOr()``` methods will return a single model instance or, if no results are found, execute the given closure. 
+
+```
+$flight = Flight::findOr(1, function () {
+    // ...
+});
+
+```
+```
+$flight = Flight::where('legs', '>', 3)->firstOr(function () {
+    // ...
+});
+```
+#### Not Found Exceptions
+Sometimes you may wish to throw an exception if a model is not found. This is particularly useful in routes or controllers. The ```findOrFail()``` and ```firstOrFail()``` methods will retrieve the first result of the query; however, if no result is found, an ```Illuminate\Database\Eloquent\ModelNotFoundException``` will be thrown:
+
+```
+$flight = Flight::findOrFail(1);
+$flight = Flight::where('legs', '>', 3)->firstOrFail();
+```
+
+If the ModelNotFoundException is not caught, a 404 HTTP response is automatically sent back to the client:
+```
+use App\Models\Flight;
+ 
+Route::get('/api/flights/{id}', function (string $id) {
+    return Flight::findOrFail($id);
+});
+```
+#### Retrieving or Creating Models
+The ```firstOrCreate()``` method will attempt to locate a database record using the given column / value pairs. If the model can not be found in the database, a record will be inserted with the attributes resulting from merging the first array argument with the optional second array argument:
+
+```
+use App\Models\Flight;
+ 
+// Retrieve flight by name or create it if it doesn't exist...
+$flight = Flight::firstOrCreate([
+    'name' => 'London to Paris'
+]);
+```
+```
+// Retrieve flight by name or create it with the name, delayed, and arrival_time attributes...
+$flight = Flight::firstOrCreate(
+    ['name' => 'London to Paris'],
+    ['delayed' => 1, 'arrival_time' => '11:30']
+);
+```
+```
+// Retrieve flight by name or instantiate a new Flight instance...
+$flight = Flight::firstOrNew([
+    'name' => 'London to Paris'
+]);
+```
+```
+// Retrieve flight by name or instantiate with the name, delayed, and arrival_time attributes...
+$flight = Flight::firstOrNew(
+    ['name' => 'Tokyo to Sydney'],
+    ['delayed' => 1, 'arrival_time' => '11:30']
+);
+```
+
 #### More Coming Soon..
