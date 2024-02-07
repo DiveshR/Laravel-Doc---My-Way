@@ -349,5 +349,77 @@ $flight = Flight::firstOrNew(
     ['delayed' => 1, 'arrival_time' => '11:30']
 );
 ```
+#### Retrieving Aggregates
+When interacting with Eloquent models, you may also use the ```count```, ```sum```, ```max```, and other aggregate methods provided by the Laravel query builder.
+These methods return a scalar value instead of an Eloquent model instance:
+```
+$count = Flight::where('active', 1)->count();
+$max = Flight::where('active', 1)->max('price');
+```
+### Inserting and Updating Models
+#### Inserts
+To insert a new record into the database, you should instantiate a new model instance and set attributes on the model. Then, call the save method on the model instance:
+
+```
+<?php
+ 
+namespace App\Http\Controllers;
+ 
+use App\Http\Controllers\Controller;
+use App\Models\Flight;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+ 
+class FlightController extends Controller
+{
+    /**
+     * Store a new flight in the database.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        // Validate the request...
+ 
+        $flight = new Flight;
+ 
+        $flight->name = $request->name;
+ 
+        $flight->save();
+ 
+        return redirect('/flights');
+    }
+}
+```
+In this example, we assign the ```name``` field from the incoming HTTP request to the name attribute of the ```App\Models\Flight``` model instance. When we call the ```save()``` method, a record will be inserted into the database. The model's ```created_at``` and ```updated_at``` timestamps will automatically be set when the save method is called, so there is no need to set them manually.
+
+Alternatively, you may use the create method to "save" a new model using a single PHP statement. 
+
+```
+use App\Models\Flight;
+ 
+$flight = Flight::create([
+    'name' => 'London to Paris',
+]);
+```
+
+However, before using the create method, you will need to specify either a ```fillable``` or ```guarded``` property on your model class. These properties are required because all Eloquent models are protected against mass assignment vulnerabilities by default.
+
+#### Updates
+```
+use App\Models\Flight;
+ 
+$flight = Flight::find(1);
+ 
+$flight->name = 'Paris to London';
+ 
+$flight->save();
+```
+
+##### Mass Updates
+```
+Flight::where('active', 1)
+      ->where('destination', 'San Diego')
+      ->update(['delayed' => 1]);
+```
+ In this example, all flights that are active and have a destination of San Diego will be marked as delayed:
 
 #### More Coming Soon..
